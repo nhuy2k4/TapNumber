@@ -1,7 +1,7 @@
 import CircleButton from './CircleButton';
 import Combo from './Combo';
 
-const GameZone = ({ numbers, wrongValue, onClickNumber, gameState, comboMessage}) => {
+const GameZone = ({ numbers, wrongValue, onClickNumber, gameState, comboMessage, hardMode}) => {
   return (
     <div
       className={`relative w-[500px] h-[500px] border border-gray-400 rounded p-4 bg-white `}>
@@ -18,6 +18,7 @@ const GameZone = ({ numbers, wrongValue, onClickNumber, gameState, comboMessage}
           isWrong={wrongValue === num.value}
           isCorrect={num.isCorrect || false}
           gameState={gameState}
+          hardMode={hardMode}
         />
         ))}
     </div>

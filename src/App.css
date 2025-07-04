@@ -49,3 +49,14 @@
 .animate-ping {
   animation: ping 0.5s ease-in-out;
 }
+@keyframes float {
+  0% { transform: translate(-50%, -50%) translate(0px, 0px); }
+  25% { transform: translate(-50%, -50%) translate(10px, -5px); }
+  50% { transform: translate(-50%, -50%) translate(-10px, 5px); }
+  75% { transform: translate(-50%, -50%) translate(5px, -10px); }
+  100% { transform: translate(-50%, -50%) translate(0px, 0px); }
+}
+
+.float-anim {
+  animation: float 3s infinite ease-in-out;
+}

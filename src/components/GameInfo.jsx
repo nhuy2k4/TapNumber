@@ -12,7 +12,9 @@ const GameInfo = ({ gameData }) => {
     setStatus,
     autoplay,
     toggleAutoplay,
-    gameState
+    gameState,
+    hardMode,
+    setHardMode
   } = gameData;
 
   return (
@@ -26,6 +28,8 @@ const GameInfo = ({ gameData }) => {
         autoplay={autoplay}
         toggleAutoplay={toggleAutoplay}
         gameState={gameState}
+        hardMode={hardMode}
+        setHardMode={setHardMode}
       />
     </div>
   );

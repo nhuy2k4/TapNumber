@@ -1,42 +1,85 @@
 import { useEffect, useState, useRef } from 'react';
 import { GAME_STATES } from '../utils/constants';
 
-const CircleButton = ({ value, x, y, onClick, isWrong, isCorrect, gameState }) => {
-  const [countdown, setCountdown] = useState(2); // 2s
+const CircleButton = ({
+  value,
+  x,
+  y,
+  onClick,
+  isWrong,
+  isCorrect,
+  gameState,
+  hardMode,
+}) => {
+  const [countdown, setCountdown] = useState(2);
+  const [pos, setPos] = useState({ x, y });
+
+  // 👉 Dùng ref cho velocity để tránh re-render
+  const velocityRef = useRef({
+    vx: (Math.random() * 0.4 + 0.2) * (Math.random() > 0.5 ? 1 : -1),
+    vy: (Math.random() * 0.4 + 0.2) * (Math.random() > 0.5 ? 1 : -1),
+  });
+
   const gameStateRef = useRef(gameState);
   const intervalRef = useRef(null);
+  const animRef = useRef(null);
+
+  // Reset countdown khi vào PLAYING
   useEffect(() => {
     gameStateRef.current = gameState;
     if (gameState === GAME_STATES.PLAYING) {
-    setCountdown(2); // 🔄 Reset lại độ mờ
-  }
+      setCountdown(2);
+    }
   }, [gameState]);
 
+  // Đếm mờ dần
   useEffect(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
+    if (intervalRef.current) clearInterval(intervalRef.current);
     if (!isCorrect || gameStateRef.current === GAME_STATES.GAMEOVER) return;
-    const interval = setInterval(() => {
-      setCountdown(prev => {
-        if (gameStateRef.current === GAME_STATES.GAMEOVER || prev <= 0.1) {
-          clearInterval(interval);
-          return prev <= 0.1 ? 0 : prev; // Dừng tại giá trị hiện tại
+
+    intervalRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 0.1 || gameStateRef.current === GAME_STATES.GAMEOVER) {
+          clearInterval(intervalRef.current);
+          return 0;
         }
         return +(prev - 0.1).toFixed(1);
       });
     }, 100);
 
-   return () => {
-      // 🧹 clear khi component unmount hoặc isCorrect/gameState thay đổi
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
+    return () => clearInterval(intervalRef.current);
   }, [isCorrect, gameState]);
 
+  // 👇 Di chuyển khi hard mode
+  useEffect(() => {
+    if (!hardMode || isCorrect || gameState !== GAME_STATES.PLAYING) return;
+
+    const update = () => {
+      setPos((prev) => {
+        const velocity = velocityRef.current;
+
+        let newX = prev.x + velocity.vx;
+        let newY = prev.y + velocity.vy;
+
+        // Chạm biên thì dội lại
+        if (newX < 5 || newX > 95) velocity.vx *= -1;
+        if (newY < 5 || newY > 95) velocity.vy *= -1;
+
+        return {
+          x: Math.max(5, Math.min(newX, 95)),
+          y: Math.max(5, Math.min(newY, 95)),
+        };
+      });
+
+      animRef.current = requestAnimationFrame(update);
+    };
+
+    animRef.current = requestAnimationFrame(update);
+
+    return () => cancelAnimationFrame(animRef.current);
+  }, [hardMode, isCorrect, gameState]);
+
+  // Style
   let baseStyle = 'border-2 border-red-500 bg-white text-red-500';
   if (isWrong) baseStyle = 'border-2 border-red-700 bg-red-500 text';
   if (isCorrect) baseStyle = 'bg-green-500';
@@ -47,12 +90,12 @@ const CircleButton = ({ value, x, y, onClick, isWrong, isCorrect, gameState }) =
       disabled={isCorrect || gameState === GAME_STATES.GAMEOVER}
       className={`absolute w-12 h-12 rounded-full flex items-center justify-center font-bold ${baseStyle}`}
       style={{
-        left: `${x}%`,
-        top: `${y}%`,
-        transform: `translate(-50%, -50%)`,
+        left: `${pos.x}%`,
+        top: `${pos.y}%`,
+        transform: 'translate(-50%, -50%)',
         opacity: countdown / 2,
         zIndex: 9999 - value,
-        transition: 'transform 0.1s linear, opacity 0.1s linear',
+        transition: isCorrect ? 'opacity 0.1s' : 'none',
       }}
     >
       <span className={`${isCorrect ? 'relative -top-[5px]' : ''}`}>
